@@ -4,7 +4,8 @@ MAINTAINER Exor info@exorint.it
 # Use bash insted of sh
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-# Install required packages
+# Install required packages and setup source repositories (required to patch pam)
+RUN cat /etc/apt/sources.list | sed  s/deb/deb-src/ >> /etc/apt/sources.list
 RUN apt-get update && apt-get install -y git python diffstat texinfo gawk chrpath wget nano
 RUN apt-get install -y build-essential sudo
 RUN apt-get install -y x11vnc xvfb xinit
@@ -23,8 +24,6 @@ RUN mkdir -p /var/run/dbus
 
 # to use avahi in with --net host we need to rebuild pam with disable-audit to due a kernel bug solved in kernels > 3.15
 #Setup build environment for libpam
-RUN cat /etc/apt/sources.list | sed  s/deb/deb-src/ >> /etc/apt/sources.list
-RUN apt-get update
 RUN apt-get -y build-dep pam
 #Rebuild and istall libpam with --disable-audit option
 RUN export CONFIGURE_OPTS=--disable-audit && cd /root && apt-get -b source pam && dpkg -i libpam-doc*.deb libpam-modules*.deb libpam-runtime*.deb libpam0g*.deb
