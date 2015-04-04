@@ -97,12 +97,12 @@ COPY data/.bashrc /home/user/.bashrc
 RUN chown user:user /home/user/.bashrc
 
 # screen logo
-COPY data/Pattern_Radial.edj /share/enlightenment/data/backgrounds/Pattern_Radial.edj
-RUN chown user:user /share/enlightenment/data/backgrounds/Pattern_Radial.edj
+COPY data/Pattern_Radial.edj /usr/share/enlightenment/data/backgrounds/Pattern_Radial.edj
+RUN chown user:user /usr/share/enlightenment/data/backgrounds/Pattern_Radial.edj
 
 # cleanup
 #RUN apt-get clean
 #RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /home/user
-CMD bash -c ' exec &> /dev/null ; dbus-daemon --system; avahi-daemon --no-drop-root -D; su user -c "/usr/bin/xinit -- /usr/bin/Xvfb :9 -screen 0 1280x768x24  & "'; su user 
+CMD bash -c 'exec &> /dev/null ; dbus-daemon --system; avahi-daemon --no-drop-root -D; su user -c "rm -f /tmp/.X9-lock; /usr/bin/xinit -- /usr/bin/Xvfb :9 -screen 0 1280x768x24  & "'; su user 
