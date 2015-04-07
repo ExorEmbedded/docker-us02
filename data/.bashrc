@@ -132,9 +132,9 @@ echo '
 [ "$color_prompt" = yes ] && echo -en "\e[00m"
 
 echo '
-   Welcome to the Exor Altera KIT docker image!
+   Welcome to the Exor Altera Starkter KIT docker image!
 
-   - VNC interface listening at port 5555 (vncviewer localhost:5555).
+   - VNC interface listening on port 5555 (vncviewer localhost:5555).
    - Ctrl+D to exit this console.
    - docker start -ai <container_name> to resume the console.
 '
