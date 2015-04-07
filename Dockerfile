@@ -1,69 +1,108 @@
-FROM ubuntu:14.04
-MAINTAINER Exor info@exorint.it
+FROM 32bit/ubuntu:14.04
+MAINTAINER Exor info@exorembedded.it
 
 # Use bash insted of sh
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-# Install required packages
-RUN apt-get update && apt-get install -y git python diffstat texinfo gawk chrpath wget
-RUN apt-get install -y build-essential x11vnc xvfb openbox xinit sudo xfe
+# Install required packages and setup source repositories (required to patch pam)
+RUN cat /etc/apt/sources.list | sed  s/deb/deb-src/ >> /etc/apt/sources.list
+RUN apt-get update && apt-get install -y git python diffstat texinfo gawk chrpath wget nano
+RUN apt-get install -y build-essential sudo
+RUN apt-get install -y x11vnc xvfb xinit
 
-# Force update git repositories in docker build
-RUN echo 1 > /boot/vmVersion 
+# Fake initscripts
+RUN dpkg-divert --local --rename --add /sbin/initctl
+RUN dpkg-divert --local --rename --add /etc/init.d/systemd-logind
+RUN ln -sf /bin/true /sbin/initctl
+RUN ln -sf /bin/true /etc/init.d/systemd-logind
+RUN apt-get install -y e17
+
+# Setup avahi to autoconnect to device
+RUN apt-get install -y avahi-daemon avahi-utils
+EXPOSE 5353/udp
+RUN mkdir -p /var/run/dbus
+
+# to use avahi in with --net host we need to rebuild pam with disable-audit to due a kernel bug solved in kernels > 3.15
+#Setup build environment for libpam
+RUN apt-get -y build-dep pam
+#Rebuild and istall libpam with --disable-audit option
+RUN export CONFIGURE_OPTS=--disable-audit && cd /root && apt-get -b source pam && dpkg -i libpam-doc*.deb libpam-modules*.deb libpam-runtime*.deb libpam0g*.deb
+
+# gstreamer qtcreator deps
+RUN sudo apt-get install -y libgstreamer0.10-0 libgstreamer-plugins-base0.10-0
+
+# Trigger a cache cleanup changing version number
+RUN echo 1.0 > /boot/vmVersion
+
+# Install SDK
+RUN wget https://copy.com/JNh9V08fl4AH17h4/us02-public/exor-alterakit-sdk-i386.sh?download=1 -O /exor-alterakit-sdk.sh
+RUN chmod +x /exor-alterakit-sdk.sh
+RUN /exor-alterakit-sdk.sh
+RUN rm -f /exor-alterakit-sdk.sh
+
+# Bitbake wont run as root, create a new user and home folder
+RUN useradd -m -d /home/user -s /bin/bash user && echo "user:password" | chpasswd && adduser user sudo
+RUN chown -R user:user /home/user 
+
+# Change user
+USER user
+ENV HOME /home/user
+
+# Install qtcreator
+RUN wget https://copy.com/JNh9V08fl4AH17h4/us02-public/qtcreator-docker-3.3.2.tar.gz?download=1 -O /home/user/qtcreator-3.3.2.tar.gz
+RUN tar xpzf ~/qtcreator-3.3.2.tar.gz -C ~/ && rm ~/qtcreator-3.3.2.tar.gz
 
 # Clone repositories
-RUN mkdir -p /home/user/git
-WORKDIR /home/user/git
+RUN mkdir -p ~/yocto-1.5.3/git
+WORKDIR /home/user/yocto-1.5.3/git
 RUN git clone -b exorint git://github.com/ExorEmbedded/yocto-poky.git
 RUN git clone -b exorint git://github.com/ExorEmbedded/yocto-meta-openembedded.git
 RUN git clone -b dora git://github.com/ExorEmbedded/meta-browser.git
 RUN git clone -b master git://github.com/ExorEmbedded/meta-exor-us02.git
 
-# Install SDK
-RUN wget https://copy.com/AaxisLZ8tNeUhbLD?download=1 -O /opt/exor-alterakit-sdk.sh
-RUN chmod +x /opt/exor-alterakit-sdk.sh
-RUN /opt/exor-alterakit-sdk.sh
-RUN rm -f /opt/exor-alterakit-sdk.sh
-
-# Install qtcreator
-RUN wget https://copy.com/LH2rFNOjRW4LCpdd?download=1 -O /opt/qt-creator-docker.tar.gz
-RUN tar xzf /opt/qt-creator-docker.tar.gz -C /opt qtcreator
-RUN ln -s /opt/qtcreator/bin/qtcreator /usr/bin/qtcreator
-RUN tar xzf /opt/qt-creator-docker.tar.gz -C /home/user .local .config
-RUN rm -f /opt/qt-creator-docker.tar.gz
-
 # Init yocto environment and configure
 RUN source yocto-poky/oe-init-build-env ../build
-WORKDIR /home/user/build
-RUN cp ../git/meta-exor-us02/conf/bblayers.conf.sample conf/bblayers.conf
-RUN cp ../git/meta-exor-us02/conf/local.conf.sample conf/local.conf
+WORKDIR /home/user/yocto-1.5.3/build
+RUN ls -l ../
+RUN cp ../git/meta-exor-us02/conf/bblayers.conf.sample /home/user/yocto-1.5.3/build/conf/bblayers.conf
+RUN cp ../git/meta-exor-us02/conf/local.conf.sample /home/user/yocto-1.5.3/build/conf/local.conf
 
-# Strart VNC and openbox
-RUN echo -e "x11vnc -forever -nopw -display :1 -rfbport 5555 & \n \
-	xfe /home/user & \n \
-	xterm -display :1 & \n \
-	openbox-session" >> /etc/startup
-RUN chmod +x /etc/startup
-RUN mkdir /home/user/.vnc
-RUN echo -e "exec &> /dev/null \n \
-	xinit /etc/startup -- /usr/bin/Xvfb :1 -screen 0 1024x768x16 &" > /xinit
-RUN chmod +x /xinit
+# Apply settings and customizations
+COPY data/e17-settings.tar.gz /home/user/e17-settings.tar.gz
+COPY data/qtcreator-3.3.2-settings.tar.gz /home/user/qtcreator-3.3.2-settings.tar.gz
+RUN tar xvzpf ~/e17-settings.tar.gz -C ~/ && rm ~/e17-settings.tar.gz
+RUN tar xvzpf ~/qtcreator-3.3.2-settings.tar.gz -C ~/ && rm ~/qtcreator-3.3.2-settings.tar.gz
+
+# Start VNC and desktop
+RUN echo -e "x11vnc -forever -nopw -display :9 -rfbport 5555 & \n source /opt/poky/1.5.3/environ* \n enlightenment_start \n" >> ~/.xinitrc
+RUN mkdir ~/.vnc
 
 # Export port 5555 to the host for VNC connection
-#EXPOSE 5555:5555
+EXPOSE 5555
+# Export port 5353 to the host for mdns
+EXPOSE 5353
 
-# Bitbake wont run as root, create a new user
-RUN useradd user && echo "user:password" | chpasswd && adduser user sudo
-RUN chown -R user:user /home/user 
 
-# Set user home as a volume
-VOLUME /home/user
+USER root
 
-# Solves permission issues with sudo
-RUN chown -R root:root /usr/bin/sudo /var/lib/sudo /etc/sudoers* /usr/lib/sudo
-RUN chmod 4755 /usr/bin/sudo /var/lib/sudo /etc/sudoers* /usr/lib/sudo
+# Set user home as volume
+VOLUME /home/user/share
 
-# Change user
-USER user
+# sample helloworld project
+COPY data/helloworld /home/user/helloworld
+RUN chown -R user:user /home/user/helloworld
 
-CMD bash -C '/xinit';'bash'
+# welcome message
+COPY data/.bashrc /home/user/.bashrc
+RUN chown user:user /home/user/.bashrc
+
+# screen logo
+COPY data/Pattern_Radial.edj /usr/share/enlightenment/data/backgrounds/Pattern_Radial.edj
+RUN chown user:user /usr/share/enlightenment/data/backgrounds/Pattern_Radial.edj
+
+# cleanup
+#RUN apt-get clean
+#RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR /home/user
+CMD bash -c 'exec &> /dev/null ; dbus-daemon --system; avahi-daemon --no-drop-root -D; su user -c "rm -f /tmp/.X9-lock; /usr/bin/xinit -- /usr/bin/Xvfb :9 -screen 0 1280x768x24  & "'; su user 
