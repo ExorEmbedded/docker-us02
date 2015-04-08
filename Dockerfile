@@ -60,12 +60,8 @@ RUN git clone -b exorint git://github.com/ExorEmbedded/yocto-meta-openembedded.g
 RUN git clone -b dora git://github.com/ExorEmbedded/meta-browser.git
 RUN git clone -b master git://github.com/ExorEmbedded/meta-exor-us02.git
 
-# Init yocto environment and configure
-RUN source yocto-poky/oe-init-build-env ../build
-WORKDIR /home/user/yocto-1.5.3/build
-RUN ls -l ../
-RUN cp ../git/meta-exor-us02/conf/bblayers.conf.sample /home/user/yocto-1.5.3/build/conf/bblayers.conf
-RUN cp ../git/meta-exor-us02/conf/local.conf.sample /home/user/yocto-1.5.3/build/conf/local.conf
+# Set yocto config template path
+ENV TEMPLATECONF /home/user/yocto-1.5.3/git/meta-exor-us02/conf
 
 # Apply settings and customizations
 COPY data/e17-settings.tar.gz /home/user/e17-settings.tar.gz
