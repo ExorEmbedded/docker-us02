@@ -59,6 +59,7 @@ RUN git clone -b exorint git://github.com/ExorEmbedded/yocto-poky.git
 RUN git clone -b exorint git://github.com/ExorEmbedded/yocto-meta-openembedded.git
 RUN git clone -b dora git://github.com/ExorEmbedded/meta-browser.git
 RUN git clone -b master git://github.com/ExorEmbedded/meta-exor-us02.git
+RUN echo 'BUILD_ARCH = "i686"' >> meta-exor-us02/conf/local.conf.sample
 
 # Set yocto config template path
 ENV TEMPLATECONF /home/user/yocto-1.5.3/git/meta-exor-us02/conf
