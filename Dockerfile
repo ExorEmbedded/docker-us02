@@ -8,7 +8,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN cat /etc/apt/sources.list | sed  s/deb/deb-src/ >> /etc/apt/sources.list
 RUN apt-get update && apt-get install -y git python diffstat texinfo gawk chrpath wget nano
 RUN apt-get install -y build-essential sudo
-RUN apt-get install -y x11vnc xvfb xinit bc
+RUN apt-get install -y x11vnc xvfb xinit bc g++-multilib
 
 # Fake initscripts
 RUN dpkg-divert --local --rename --add /sbin/initctl
@@ -71,7 +71,7 @@ RUN tar xvzpf ~/e17-settings.tar.gz -C ~/ && rm ~/e17-settings.tar.gz
 RUN tar xvzpf ~/qtcreator-3.3.2-settings.tar.gz -C ~/ && rm ~/qtcreator-3.3.2-settings.tar.gz
 
 # Start VNC and desktop
-RUN echo -e "x11vnc -forever -nopw -display :9 -rfbport 5555 & \n source /opt/poky/1.5.3/environ* \n enlightenment_start \n" >> ~/.xinitrc
+RUN echo -e "x11vnc -forever -nopw -display :9 -rfbport 5555 & \n enlightenment_start \n" >> ~/.xinitrc
 RUN mkdir ~/.vnc
 
 # Export port 5555 to the host for VNC connection
