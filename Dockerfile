@@ -32,7 +32,7 @@ RUN export CONFIGURE_OPTS=--disable-audit && cd /root && apt-get -b source pam &
 RUN sudo apt-get install -y libgstreamer0.10-0 libgstreamer-plugins-base0.10-0
 
 # Trigger a cache cleanup changing version number
-RUN echo 1.0 > /boot/vmVersion
+RUN echo 1.1 > /boot/vmVersion
 
 # Install SDK
 RUN wget https://copy.com/JNh9V08fl4AH17h4/us02-public/exor-alterakit-sdk-i386.sh?download=1 -O /exor-alterakit-sdk.sh
