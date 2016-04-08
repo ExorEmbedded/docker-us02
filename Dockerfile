@@ -26,7 +26,7 @@ RUN mkdir -p /var/run/dbus
 #Setup build environment for libpam
 RUN apt-get -y build-dep pam
 #Rebuild and istall libpam with --disable-audit option
-RUN export CONFIGURE_OPTS=--disable-audit && cd /root && apt-get -b source pam && dpkg -i libpam-doc*.deb libpam-modules*.deb libpam-runtime*.deb libpam0g*.deb
+RUN export CONFIGURE_OPTS=--disable-audit && cd /root && apt-get -b source pam && dpkg -i libpam-doc*.deb libpam-modules-bin*.deb libpam-runtime*.deb libpam0g*.deb && dpkg -i libpam-modules_1.1.8-1ubuntu2.2_i386.deb
 
 # gstreamer qtcreator deps
 RUN sudo apt-get install -y libgstreamer0.10-0 libgstreamer-plugins-base0.10-0
