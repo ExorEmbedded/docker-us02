@@ -1,9 +1,9 @@
-Exor Altera Starter KIT development image
+Exor Starter KIT development image
 =========================================
 
-This repo provides the Dockerfile to build Exor Altera Starter KIT development image.
+This repo provides the Dockerfile to build Exor Starter KIT development image.
 
-This image is preconfigured to cross compile, deploy and debug the BSP, kernel and applications of Exor Altera Starter KIT.
+This image is preconfigured to cross compile, deploy and debug the BSP, kernel and applications of Exor Evaluation Kits.
 
 Build
 -----
@@ -17,12 +17,12 @@ First time run
 ---------------
 
 ```
-   docker run --name us02 --net host -v /local/folder:/home/user/share -ti exorembedded/docker-us02-32bit
+   docker run --name exor --net host -v /local/folder:/home/user/share -ti exorembedded/docker-us02-32bit
 ```
 
-Option `--name us02` allows to easily control the container by name using the command line docker utility.
+Option `--name exor` allows to easily control the container by name using the command line docker utility.
 
-Option `--net host` bridges all network interfaces of hosting machine. So it is possible to use avahi to resolve the starter kit hostname (exoralterakit.local).
+Option `--net host` bridges all network interfaces of hosting machine. So it is possible to use avahi to resolve the starter kit hostname.
 
 Option `-v /local/folder:/home/user/share` binds the host folder `/local/folder` to the container folder `/home/user/share`.
 
@@ -32,7 +32,7 @@ Tipical usage
 -----------
 
 ```
-   docker start -ai us02
+   docker start -ai exor
 ```
 
 ```
@@ -42,7 +42,7 @@ Tipical usage
 or
 
 ```
-   docker stop us02
+   docker stop exor
 ```
    
 to exit session.
