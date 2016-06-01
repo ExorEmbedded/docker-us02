@@ -4,6 +4,8 @@ MAINTAINER Exor info@exorembedded.it
 # Use bash insted of sh
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
+RUN echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+
 # Install required packages and setup source repositories (required to patch pam)
 RUN cat /etc/apt/sources.list | sed  s/deb/deb-src/ >> /etc/apt/sources.list
 RUN apt-get update && apt-get install -y git python diffstat texinfo gawk chrpath wget nano
